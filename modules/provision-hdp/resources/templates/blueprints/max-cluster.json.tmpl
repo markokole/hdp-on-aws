@@ -1,0 +1,135 @@
+{
+  "configurations" : [
+    {
+      "hdfs-site" : {
+        "fs.s3a.access.key" : "${s3a_access_key}",
+        "fs.s3a.secret.key" : "${s3a_secret_key}",
+        "dfs.replication" : "1",
+        "dfs.ha.fencing.methods" : "shell(/bin/true)",
+        "dfs.namenode.http-address.${clustername}.nn1" : "${nn1_dns}:50070",
+        "dfs.namenode.http-address.${clustername}.nn2" : "${nn2_dns}:50070",
+        "dfs.namenode.https-address.${clustername}.nn1" : "${nn1_dns}:50470",
+        "dfs.namenode.https-address.${clustername}.nn2" : "${nn2_dns}:50470",
+        "dfs.namenode.rpc-address.${clustername}.nn1" : "${nn1_dns}:8020",
+        "dfs.namenode.rpc-address.${clustername}.nn2" : "${nn2_dns}:8020",
+        "dfs.namenode.shared.edits.dir" : "${qjournal}",
+        "dfs.nameservices" : "${clustername}",
+        "dfs.internal.nameservices" : "${clustername}",
+        "dfs.ha.namenodes.${clustername}" : "nn1,nn2",
+        "dfs.ha.automatic-failover.enabled" : "true",
+        "dfs.client.failover.proxy.provider.${clustername}" : "org.apache.hadoop.hdfs.server.namenode.ha.ConfiguredFailoverProxyProvider",
+        "dfs.namenode.secondary.http-address" : "localhost:50090"
+      }
+    },
+    {
+      "core-site" : {
+        "fs.defaultFS" : "hdfs://${clustername}",
+        "hadoop.http.authentication.type" : "simple",
+        "ha.zookeeper.quorum" : "${zookeeper_quorum}"
+      }
+    },
+    {
+      "hive-site" : {
+        "fs.s3a.access.key" : "${s3a_access_key}",
+        "fs.s3a.secret.key" : "${s3a_secret_key}",
+        "javax.jdo.option.ConnectionURL" : "jdbc:postgresql://${postgres_server}:5432/hive",
+        "javax.jdo.option.ConnectionDriverName" : "org.postgresql.Driver",
+        "javax.jdo.option.ConnectionUserName" : "hive",
+        "javax.jdo.option.ConnectionPassword" : "hive"
+      }
+    },
+    {
+      "hive-env" : {
+        "hive_database": "Existing PostgreSQL Database",
+        "hive_database_type": "postgres"
+      }
+    },
+    {
+      "admin-properties" : {
+        "DB_FLAVOR" : "POSTGRES",
+        "SQL_CONNECTOR_JAR" : "/usr/share/java/postgresql-jdbc.jar",
+        "db_host" : "localhost",
+        "db_name" : "ranger",
+        "db_user" : "rangeradmin",
+        "db_password" : "rangeradmin",
+        "policymgr_external_url" : "http://localhost:6080",
+        "db_root_user" : "postgres",
+        "db_root_password" : "postgres",
+        "ranger_privelege_user_jdbc_url" : "jdbc:postgresql://localhost:5432/postgres"
+      }
+    },
+    {
+      "ranger-admin-site" : {
+        "ranger.externalurl" : "http://localhost:6080",
+        "ranger.jpa.jdbc.driver": "org.postgresql.Driver",
+        "ranger.jpa.jdbc.url": "jdbc:postgresql://localhost:5432/ranger"
+      }
+    },
+    {
+      "ranger-hdfs-audit" : {
+        "xasecure.audit.destination.hdfs" : "true",
+        "xasecure.audit.destination.solr" : "false"
+      }
+    },
+    {
+      "kms-properties" : {
+        "DB_FLAVOR" : "POSTGRES",
+        "SQL_CONNECTOR_JAR" : "/usr/share/java/postgresql-jdbc.jar",
+        "KMS_MASTER_KEY_PASSWD" : "rangerkms",
+        "db_host" : "localhost",
+        "db_name" : "rangerkms",
+        "db_user" : "rangerkms",
+        "db_password" : "rangerkms",
+        "db_root_user" : "postgres",
+        "db_root_password" : "postgres",
+        "ranger_privelege_user_jdbc_url" : "jdbc:postgresql://localhost:5432/postgres"
+      }
+    },
+    {
+      "ranger-kms-audit" : {
+        "xasecure.audit.destination.hdfs" : "true",
+        "xasecure.audit.destination.solr" : "false"
+      }
+    },
+    {
+      "dbks-site" : {
+        "ranger.ks.jpa.jdbc.url" : "jdbc:postgresql://localhost:5432/rangerkms",
+        "ranger.ks.jpa.jdbc.driver": "org.postgresql.Driver"
+      }
+    }
+  ],
+  "host_groups" : [
+   {
+     "name" : "ambari-services",
+     "configurations" : [],
+     "components" : [
+${ambari_services}
+     ]
+   },
+    {
+      "name" : "hdp-master-01",
+      "configurations" : [],
+      "components" : [
+${master_services}
+      ]
+    },
+    {
+      "name" : "hdp-master-02",
+      "configurations" : [],
+      "components" : [
+${master_services}
+      ]
+    },
+    {
+      "name" : "hdp-worker",
+      "configurations" : [ ],
+      "components" : [
+${slave_services}
+      ]
+    }
+  ],
+  "Blueprints" : {
+    "stack_name" : "HDP",
+    "stack_version" : "3.1"
+  }
+}

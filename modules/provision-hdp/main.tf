@@ -1,5 +1,5 @@
 module "provision_hdp" {
-  source             = "../06-instance"
+  source             = "../instance"
   cluster_type       = "${var.cluster_type}"
 }
 

@@ -1,0 +1,77 @@
+{
+  "configurations" : [
+    {
+      "hdfs-site" : {
+        "fs.s3a.access.key" : "${s3a_access_key}",
+        "fs.s3a.secret.key" : "${s3a_secret_key}",
+        "dfs.replication" : "1"
+      }
+    },
+    {
+      "admin-properties" : {
+        "DB_FLAVOR" : "POSTGRES",
+        "SQL_CONNECTOR_JAR" : "/usr/share/java/postgresql-jdbc.jar",
+        "db_host" : "localhost",
+        "db_name" : "ranger",
+        "db_user" : "rangeradmin",
+        "db_password" : "rangeradmin",
+        "policymgr_external_url" : "http://localhost:6080",
+        "db_root_user" : "postgres",
+        "db_root_password" : "postgres",
+        "ranger_privelege_user_jdbc_url" : "jdbc:postgresql://localhost:5432/postgres"
+      }
+    },
+    {
+      "ranger-admin-site" : {
+        "ranger.externalurl" : "http://localhost:6080",
+        "ranger.jpa.jdbc.driver": "org.postgresql.Driver",
+        "ranger.jpa.jdbc.url": "jdbc:postgresql://localhost:5432/ranger"
+      }
+    },
+    {
+      "ranger-hdfs-audit" : {
+        "xasecure.audit.destination.hdfs" : "true",
+        "xasecure.audit.destination.solr" : "false"
+      }
+    },
+    {
+      "kms-properties" : {
+        "DB_FLAVOR" : "POSTGRES",
+        "SQL_CONNECTOR_JAR" : "/usr/share/java/postgresql-jdbc.jar",
+        "KMS_MASTER_KEY_PASSWD" : "rangerkms",
+        "db_host" : "localhost",
+        "db_name" : "rangerkms",
+        "db_user" : "rangerkms",
+        "db_password" : "rangerkms",
+        "db_root_user" : "postgres",
+        "db_root_password" : "postgres",
+        "ranger_privelege_user_jdbc_url" : "jdbc:postgresql://localhost:5432/postgres"
+      }
+    },
+    {
+      "ranger-kms-audit" : {
+        "xasecure.audit.destination.hdfs" : "true",
+        "xasecure.audit.destination.solr" : "false"
+      }
+    },
+    {
+      "dbks-site" : {
+        "ranger.ks.jpa.jdbc.url" : "jdbc:postgresql://localhost:5432/rangerkms",
+        "ranger.ks.jpa.jdbc.driver": "org.postgresql.Driver"
+      }
+    }
+  ],
+  "host_groups" : [
+    {
+      "name" : "hdp-master",
+      "configurations" : [ ],
+      "components" : [
+${master_services}
+      ]
+    }
+  ],
+  "Blueprints" : {
+    "stack_name" : "HDP",
+    "stack_version" : "3.1"
+  }
+}

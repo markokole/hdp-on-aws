@@ -1,13 +1,20 @@
 provider "aws" {
-  region = "${data.consul_keys.app.var.region}"
+  region = "${local.region}"
 }
 
 locals {
+  path_to_generated_aws_properties = "${var.path_in_consul}/${data.consul_keys.app.var.path_to_generated_aws_properties}"
+
+  cidr_blocks = "${data.consul_keys.system.var.cidr_blocks}/32"
+
+  region = "${data.consul_keys.app.var.region}"
   type = "${data.consul_keys.app.var.type}"
   ami = "${data.consul_keys.app.var.ami}"
   instance_type = "${data.consul_keys.app.var.instance_type}"
+  vpc_id = "${data.consul_keys.aws.var.vpc_id}"
   subnet_id = "${data.consul_keys.aws.var.subnet_id}"
-  security_groups = ["${data.consul_keys.aws.var.security_group}"]
+  #security_groups = ["${data.consul_keys.aws.var.security_group}", "${aws_security_group.sg_hdp_terraform.id}"]
+  security_groups = ["${aws_security_group.sg_hdp_terraform.id}"]
   availability_zone = "${data.consul_keys.aws.var.availability_zone}"
 
   no_namenodes = "${data.consul_keys.app.var.no_namenodes}"
@@ -17,6 +24,8 @@ locals {
 }
 
 resource "aws_instance" "test_instance" {
+  depends_on = ["aws_security_group.sg_hdp_terraform"]
+
   count = "${local.no_instances}"
   ami = "${local.ami}"
   instance_type = "${local.instance_type}"

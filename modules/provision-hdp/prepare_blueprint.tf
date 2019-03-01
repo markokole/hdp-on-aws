@@ -4,7 +4,7 @@ data "template_file" "dynamic_blueprint" {
   vars {
     s3a_access_key = "${local.s3a_access_key}"
     s3a_secret_key = "${local.s3a_secret_key}"
-    postgres_server = "localhost"
+    postgres_server = "${local.ambari_dns_private}"
     master_services = "${local.master_services}"
     clustername = "${local.clustername}"
 

@@ -21,11 +21,6 @@ local   all   hive,postgres,rangeradmin,rangerkms                               
 host    all   hive,postgres,rangeradmin,rangerkms             127.0.0.1/32            trust
 # IPv6 local connections:
 host    all   hive,postgres,rangeradmin,rangerkms             ::1/128                 ident
-# Allow replication connections from localhost, by a user with the
-# replication privilege.
-#local   replication     postgres                                peer
-#host    replication     postgres        127.0.0.1/32            ident
-#host    replication     postgres        ::1/128                 ident
 
 local  all  ambari,mapred md5
 host  all   ambari,mapred 0.0.0.0/0  md5
@@ -35,6 +30,8 @@ EOF
 #service postgresql restart
 sudo service postgresql-9.6.service restart
 sudo service postgresql.service restart
+
+sudo -u postgres psql -U postgres -d postgres -c "alter user postgres with password 'postgres';"
 
 echo "GRANT ALL PRIVILEGES ON DATABASE postgres to postgres;" > /tmp/hdp_postgres_setup.sql
 
