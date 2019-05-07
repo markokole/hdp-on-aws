@@ -20,24 +20,23 @@ locals {
   no_namenodes = "${data.consul_keys.app.var.no_namenodes}"
   no_datanodes = "${data.consul_keys.app.var.no_datanodes}"
   no_instances = "${local.type == "single" ? 1 : 1 + local.no_namenodes + local.no_datanodes}"
-  name = "HDP-${var.cluster_type}"
+  name         = "HDP-${var.cluster_type}"
+  name_ambari  = "${local.type == "single" ? "" : "-Ambari"}"
 }
 
+/*
 resource "null_resource" "write_out" {
-  #depends_on = ["module.provision_hdp"]
-
   provisioner "local-exec" {
     command = <<EOF
       echo "*********************************************************"
-      echo "security_groups: ${join(", ", local.security_groups)}"
 EOF
   }
 }
-
-resource "aws_instance" "test_instance" {
+*/
+resource "aws_instance" "ambari" {
   depends_on = ["aws_security_group.sg_hdp_terraform"]
 
-  count = "${local.no_instances}"
+  count = "1" #"${local.no_instances}"
   ami = "${local.ami}"
   instance_type = "${local.instance_type}"
   subnet_id = "${local.subnet_id}"
@@ -46,7 +45,7 @@ resource "aws_instance" "test_instance" {
   key_name = "mykeypair"
   associate_public_ip_address = "true"
   tags {
-    Name = "${local.name}"
+    Name = "${local.name}${local.name_ambari}"
   }
   volume_tags {
     Name = "${local.name}-volume"
@@ -59,22 +58,52 @@ resource "aws_instance" "test_instance" {
   }
 }
 
-/*
-# write to consul
-resource "consul_keys" "app" {
-  datacenter = "${var.datacenter}"
+resource "aws_instance" "namenode" {
+  depends_on = ["aws_security_group.sg_hdp_terraform"]
 
-  key {
-     path = "test/master/aws/test-instance/instance_ids"
-     value = "${join(",", aws_instance.test_instance.*.id)}"
-   }
-   key {
-     path = "test/master/aws/test-instance/public_ips"
-     value = "${join(",", aws_instance.test_instance.*.public_ip)}"
-   }
-   key {
-     path = "test/master/aws/test-instance/public_dns"
-     value = "${join(",", aws_instance.test_instance.*.public_dns)}"
+  count = "${local.no_namenodes}"
+  ami = "${local.ami}"
+  instance_type = "${local.instance_type}"
+  subnet_id = "${local.subnet_id}"
+  security_groups = ["${local.security_groups}"]
+  availability_zone = "${local.availability_zone}"
+  key_name = "mykeypair"
+  associate_public_ip_address = "true"
+  tags {
+    Name = "${local.name}-namenode-${format("%02d", count.index + 1)}"
+  }
+  volume_tags {
+    Name = "${local.name}-volume"
+  }
+
+  root_block_device {
+    volume_size = 50
+    volume_type = "gp2"
+    delete_on_termination = "true"
   }
 }
-*/
+
+resource "aws_instance" "datanode" {
+  depends_on = ["aws_security_group.sg_hdp_terraform"]
+
+  count = "${local.no_datanodes}"
+  ami = "${local.ami}"
+  instance_type = "${local.instance_type}"
+  subnet_id = "${local.subnet_id}"
+  security_groups = ["${local.security_groups}"]
+  availability_zone = "${local.availability_zone}"
+  key_name = "mykeypair"
+  associate_public_ip_address = "true"
+  tags {
+    Name = "${local.name}-datanode-${format("%02d", count.index + 1)}"
+  }
+  volume_tags {
+    Name = "${local.name}-volume"
+  }
+
+  root_block_device {
+    volume_size = 50
+    volume_type = "gp2"
+    delete_on_termination = "true"
+  }
+}
