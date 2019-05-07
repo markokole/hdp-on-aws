@@ -5,22 +5,33 @@ provider "aws" {
 locals {
   path_to_generated_aws_properties = "${var.path_in_consul}/${data.consul_keys.app.var.path_to_generated_aws_properties}"
 
-  cidr_blocks = "${data.consul_keys.system.var.cidr_blocks}/32"
-
-  region = "${data.consul_keys.app.var.region}"
-  type = "${data.consul_keys.app.var.type}"
-  ami = "${data.consul_keys.app.var.ami}"
-  instance_type = "${data.consul_keys.app.var.instance_type}"
-  vpc_id = "${data.consul_keys.aws.var.vpc_id}"
-  subnet_id = "${data.consul_keys.aws.var.subnet_id}"
-  #security_groups = ["${data.consul_keys.aws.var.security_group}", "${aws_security_group.sg_hdp_terraform.id}"]
-  security_groups = ["${aws_security_group.sg_hdp_terraform.id}"]
-  availability_zone = "${data.consul_keys.aws.var.availability_zone}"
+  #cidr_blocks = "${data.consul_keys.system.var.cidr_blocks}/32"
+  region             = "${data.consul_keys.app.var.region}"
+  type               = "${data.consul_keys.app.var.type}"
+  ami                = "${data.consul_keys.app.var.ami}"
+  #cidr_blocks        = "${data.consul_keys.app.var.cidr_blocks}"
+  cidr_blocks        = "0.0.0.0/0"
+  instance_type      = "${data.consul_keys.app.var.instance_type}"
+  vpc_id             = "${data.consul_keys.aws.var.vpc_id}"
+  subnet_id          = "${data.consul_keys.aws.var.subnet_id}"
+  security_groups    = ["${aws_security_group.sg_hdp_terraform.id}"]
+  availability_zone  = "${data.consul_keys.aws.var.availability_zone}"
 
   no_namenodes = "${data.consul_keys.app.var.no_namenodes}"
   no_datanodes = "${data.consul_keys.app.var.no_datanodes}"
   no_instances = "${local.type == "single" ? 1 : 1 + local.no_namenodes + local.no_datanodes}"
   name = "HDP-${var.cluster_type}"
+}
+
+resource "null_resource" "write_out" {
+  #depends_on = ["module.provision_hdp"]
+
+  provisioner "local-exec" {
+    command = <<EOF
+      echo "*********************************************************"
+      echo "security_groups: ${join(", ", local.security_groups)}"
+EOF
+  }
 }
 
 resource "aws_instance" "test_instance" {
@@ -46,12 +57,6 @@ resource "aws_instance" "test_instance" {
     volume_type = "gp2"
     delete_on_termination = "true"
   }
-
-  /*ebs_block_device {
-    device_name = "/dev/xvdb"
-    volume_type = "gp2"
-    volume_size = 50
-  }*/
 }
 
 /*

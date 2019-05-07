@@ -34,6 +34,10 @@ data "consul_keys" "app" {
     path    = "${var.path_in_consul}/ami_id"
   }
   key {
+    name    = "cidr_blocks"
+    path    = "${var.path_in_consul}/cidr_blocks"
+  }
+  key {
     name    = "instance_type"
     path    = "${var.path_in_consul_hdp}/${var.cluster_type}/instance_type"
   }
@@ -80,6 +84,6 @@ data "consul_keys" "system" {
   key {
     name    = "cidr_blocks"
     path    = "system/ip"
-    default = "0.0.0.0/0"
+    default = "0.0.0.0"
   }
 }
