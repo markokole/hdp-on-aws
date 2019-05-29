@@ -3,10 +3,10 @@ The repository creates a single HDP node or an HDP HA cluster in AWS using Terra
 
 ## Prerequisities
 ### Infrastructure on AWS
-Make sure the infrastructure is setup before continuing. Run `consul kv get -recurse | grep aws/generated` to check if all services in AWS are up and running. If not, [clone this repository](https://github.com/markokole/aws-with-terraform) to prepare the infrastructure.
+Make sure the infrastructure is setup before continuing. Run `consul kv get -recurse | grep aws/generated` to check if all services in AWS are up and running. If not, [clone this repository](https://github.com/markokole/iac-aws-vpc) to prepare the infrastructure.
 
 ### HDP configuration in Consul
-HDP configuration should be defined in Consul. This is done by (cloning)[https://github.com/markokole/aws-terraform-hdp-config] and updating the `hdp.yml` file. Some examples are available already - for single and for HA cluster.
+HDP configuration should be defined in Consul. This is done by (cloning)[https://github.com/markokole/iac-consul-config] and updating the `hdp.yml` file. Some examples are available already - for single and for HA cluster.
 If you add a new configuration, make sure to also add a new file under `resources/templates/blueprints` that matches the configuration name with suffix `.json.tmpl`
 
 ## Add S3 secrets to Consul
