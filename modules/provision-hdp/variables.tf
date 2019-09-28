@@ -1,7 +1,11 @@
-variable "cluster_type" {}
+variable "cluster_type" {
+}
+
+variable s3a_access_key {}
+variable s3a_secret_key {}
 
 variable "path_in_consul" {
-  default   = "test/master/aws"
+  default = "test/master/aws"
 }
 
 variable "s3a_consul" {
@@ -9,7 +13,7 @@ variable "s3a_consul" {
 }
 
 variable "path_in_consul_hdp" {
-  default   = "test/master/hdp"
+  default = "test/master/hdp"
 }
 
 data "consul_keys" "hdp" {
@@ -18,13 +22,13 @@ data "consul_keys" "hdp" {
     path = "${var.path_in_consul_hdp}/${var.cluster_type}/type"
   }
   key {
-    name = "no_datanodes"
-    path = "${var.path_in_consul_hdp}/${var.cluster_type}/no_datanodes"
+    name    = "no_datanodes"
+    path    = "${var.path_in_consul_hdp}/${var.cluster_type}/no_datanodes"
     default = 0
   }
   key {
-    name = "no_namenodes"
-    path = "${var.path_in_consul_hdp}/${var.cluster_type}/no_namenodes"
+    name    = "no_namenodes"
+    path    = "${var.path_in_consul_hdp}/${var.cluster_type}/no_namenodes"
     default = "2"
   }
   key {
@@ -48,8 +52,8 @@ data "consul_keys" "hdp" {
     path = "${var.path_in_consul_hdp}/${var.cluster_type}/database"
   }
   key {
-    name = "s3a"
-    path = "${var.path_in_consul_hdp}/${var.cluster_type}/s3a"
+    name    = "s3a"
+    path    = "${var.path_in_consul_hdp}/${var.cluster_type}/s3a"
     default = "false"
   }
   key {
@@ -77,3 +81,4 @@ data "consul_keys" "s3a" {
     path = "${var.s3a_consul}/secret_key"
   }
 }
+

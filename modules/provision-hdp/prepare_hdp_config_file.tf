@@ -49,14 +49,16 @@ data "template_file" "generate_blueprint_dynamic_cluster" {
 */
 ### prepare hdp config file
 data "template_file" "hdp_config" {
-  template = "${file("${path.module}/resources/templates/${local.hdp_config_tmpl}")}"
+  template = file(
+    "${path.module}/resources/templates/${local.hdp_config_tmpl}",
+  )
 
-  vars {
-    clustername = "${local.clustername}"
-    ambari_version = "${local.ambari_version}"
-    hdp_version = "${local.hdp_version}"
-    hdp_build_number = "${local.hdp_build_number}"
-    database = "${local.database}"
+  vars = {
+    clustername      = local.clustername
+    ambari_version   = local.ambari_version
+    hdp_version      = local.hdp_version
+    hdp_build_number = local.hdp_build_number
+    database         = local.database
     # the blueprint_dynamic block is built based on type is single or cluster
     blueprint_dynamic = "" #"${local.type == "single" ? join("", data.template_file.generate_blueprint_dynamic_single.*.rendered) : join("", data.template_file.generate_blueprint_dynamic_cluster.*.rendered)}"
   }
@@ -64,8 +66,9 @@ data "template_file" "hdp_config" {
 
 # render hdp config file
 resource "local_file" "hdp_config_rendered" {
-  depends_on = ["module.provision_hdp"]
+  depends_on = [module.provision_hdp]
 
-  content  = "${data.template_file.hdp_config.rendered}"
+  content  = data.template_file.hdp_config.rendered
   filename = "${local.workdir}/hdp-config.yml"
 }
+

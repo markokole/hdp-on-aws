@@ -1,5 +1,12 @@
 ---
 - set_fact: outer_loop="{{ item }}"
+- set_fact:
+    aws_tags: "{{ aws_tags_custom | default({})
+    | combine({ 'Cluster': cluster_name })
+    | combine({ 'Role': outer_loop.host_group })
+    | combine({ 'Group': cluster_name + '-' + outer_loop.host_group })
+    | combine({ 'Name': cluster_name + '-' + outer_loop.host_group })
+     }}"
 
 - name: Get AMI information
   ec2_ami_facts:
@@ -24,6 +31,7 @@
     assign_public_ip: "{{ outer_loop.public_ip }}"
     key_name: "{{ cloud_config.ssh.keyname }}"
     exact_count: "{{ outer_loop.count }}"
+    instance_initiated_shutdown_behavior: "{{ (outer_loop.spot|default(false) == true) | ternary('terminate','stop') }}"
     volumes:
       - device_name: "{{ current_ami['images'][0]['root_device_name'] }}"
         volume_type: "{{ outer_loop.root_volume.type }}"
@@ -55,12 +63,7 @@
       - { device_name: /dev/xvdy, ephemeral: ephemeral23 }
     count_tag:
       Group: "{{ cluster_name }}-{{ outer_loop.host_group }}"
-    instance_tags:
-      Cluster: "{{ cluster_name }}"
-      Role: "{{ outer_loop.host_group }}"
-      Group: "{{ cluster_name }}-{{ outer_loop.host_group }}"
-      Name: "{{ cluster_name }}-{{ outer_loop.host_group }}"
-      Owner: "{{ cluster_owner | default(omit) }}"
+    instance_tags: "{{ aws_tags }}"
     wait: yes
     wait_timeout: 600
     spot_wait_timeout: 600
@@ -69,6 +72,45 @@
       [ -e /bin/yum-config-manager ] && yum-config-manager --enable rhui-REGION-rhel-server-optional
   register: current_ec2
   when: outer_loop.root_volume.ebs
+
+- name: Set name tag for AWS instances
+  ec2_tag:
+    region: "{{ cloud_config.region }}"
+    resource: "{{ local_loop.1.id }}"
+    tags:
+      Name: "{{ aws_tags.Name }}-{{ '%02d' | format(local_loop.0 + 1) }}"
+  with_indexed_items: "{{ current_ec2.instances }}"
+  loop_control:
+    label: "{{ local_loop.1.id }} - {{ aws_tags.Name }}-{{ '%02d' | format(local_loop.0 + 1) }}"
+    loop_var: local_loop
+
+# as 'instances' gets returned [] for already existing ec2 instances, better use tagged_instances
+# see: https://github.com/ansible/ansible/issues/14593
+- set_fact:    
+    ec2_instances: "{{ current_ec2.tagged_instances }}"
+
+- name: Get volumes ids
+  ec2_vol:
+    region: "{{ cloud_config.region }}"
+    instance: "{{ local_loop.id }}"
+    state: list
+  with_items: "{{ ec2_instances }}"
+  register: ec2_instances_volumes
+  loop_control:
+    label: "{{ local_loop }}"
+    loop_var: local_loop
+
+- name: Tag volumes
+  ec2_tag:
+    region: "{{ cloud_config.region }}"
+    resource: "{{ local_loop.1.id }}"
+    tags: "{{ aws_tags | combine({'Instance': local_loop.1.attachment_set.instance_id}, {'Device': local_loop.1.attachment_set.device}) }}"
+  with_subelements:
+    - "{{ ec2_instances_volumes.results }}"
+    - volumes
+  loop_control:
+    label: "{{ local_loop.1.id }} - {{ local_loop.1.attachment_set.device }}"
+    loop_var: local_loop
 
 - name: Wait for SSH to start
   wait_for:

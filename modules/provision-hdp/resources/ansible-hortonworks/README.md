@@ -3,12 +3,13 @@ ansible-hortonworks
 
 These Ansible playbooks will build a Hortonworks cluster (Hortonworks Data Platform and / or Hortonworks DataFlow) using Ambari Blueprints. For a full list of supported features check [below](#features).
 
-- Tested with: HDP 3.0 -> 3.1, HDP 2.4 -> 2.6.5, HDP Search 3.0 -> 4.0, HDF 2.0 -> 3.3, Ambari 2.4 -> 2.7 (the versions must be matched as per the [support matrix](https://supportmatrix.hortonworks.com)).
+- Tested with: HDP 3.0 -> 3.1, HDP 2.4 -> 2.6.5, HDP Search 3.0 -> 4.0, HDF 2.0 -> 3.4, Ambari 2.4 -> 2.7 (the versions must be matched as per the [support matrix](https://supportmatrix.hortonworks.com)).
 
 - This includes building the Cloud infrastructure (optional) and taking care of the prerequisites.
 
 - The aim is to first build the nodes in a Cloud environment, prepare them (OS settings, database, KDC, etc) and then install Ambari and create the cluster using Ambari Blueprints.
   - If the infrastructure is already built (Terraform, bare-metal, etc.), it can also use a [static inventory](inventory/static).
+  - For a detailed Terraform implementation check the following: [https://dataengi.com/2018/09/21/terraform-hdp](https://dataengi.com/2018/09/21/terraform-hdp).
 
 - It can use a static blueprint or a [dynamically generated](playbooks/roles/ambari-blueprint/templates/blueprint_dynamic.j2) one based on the components from the Ansible [variables file](playbooks/group_vars/all#L161).
   - The dynamic blueprint gives the freedom to distribute components for a chosen topology but this topology must respect Ambari Blueprint restrictions (e.g. if a single `NAMENODE` is set, there must also be a `SECONDARY_NAMENODE`).
@@ -162,6 +163,7 @@ Currently, these playbooks are divided into the following parts:
 - [ ] Configure Ambari Server with SSL
 - [x] Configure custom Repositories and specific HDP/HDF versions
 - [x] Configure Rack Awareness (static inventory)
+- [x] Configure custom Paths (data / logs / metrics / tmp)
 - [x] Build HDP clusters
 - [x] Build HDF clusters
 - [x] Build HDP clusters with HDF nodes

@@ -58,12 +58,12 @@
 
         - name: Set the HDF build number
           set_fact:
-            hdf_build_number: "{{ (hdf_repo_build_id.content|from_yaml).BUILD_NUMBER }}"
-      when: hdf_build_number == 'auto'
+            hdf_build_number_auto: "{{ (hdf_repo_build_id.content|from_yaml).BUILD_NUMBER }}"
+      when: hdf_build_number is not defined or hdf_build_number == 'auto'
 
     - name: Set the HDF mpack filename
       set_fact:
-        mpack_filename: "hdf-ambari-mpack-{{ hdf_version }}-{{ hdf_build_number }}.tar.gz"
+        mpack_filename: "hdf-ambari-mpack-{{ hdf_version }}-{{ hdf_build_number_auto|default(hdf_build_number) }}.tar.gz"
 
     - name: "Install the HDF Management Pack"
       shell: "echo yes | ambari-server install-mpack --mpack={{ hdf_main_repo_url }}/tars/hdf_ambari_mp/{{ mpack_filename }}"
@@ -151,8 +151,8 @@
 
             - name: Set the HDP build number (Ambari >= 2.6)
               set_fact:
-                hdp_build_number: "{{ (hdp_repo_build_id.content|from_yaml).BUILD_NUMBER }}"
-          when: hdp_build_number == 'auto'
+                hdp_build_number_auto: "{{ (hdp_repo_build_id.content|from_yaml).BUILD_NUMBER }}"
+          when: hdp_build_number is not defined or hdp_build_number == 'auto'
 
         - name: Upload the HDP Version Definition file (Ambari >= 2.6)
           template:
@@ -207,6 +207,28 @@
         return_content: no
       when: (existing_vdf.content|from_yaml)['items'] | length == 0
   when: ambari_version is version_compare('2.6', '>=')
+
+- block:
+    - name: Generate repo_version API request body from template
+      template:
+        src: "{{ repo_version_template | default('repo_version_template.json.j2') }}"
+        dest: /tmp/repo_version_update_body.json
+      become: False  
+      delegate_to: localhost        
+
+    - name: Update repo_version model to set ambari_managed_repositories=false
+      uri:
+        url: "http://{{ ansible_fqdn }}:8080/api/v1/stacks/HDP/versions/{{ hdp_minor_version }}/repository_versions/1"
+        method: PUT
+        force_basic_auth: yes
+        user: "{{ ambari_admin_user }}"
+        password: "{{ ambari_admin_password }}"
+        headers:
+          "X-Requested-By": "ambari"
+          "Content-type": "Application/json"
+        body: "{{ lookup('file', '/tmp/repo_version_update_body.json')|to_json }}"
+        status_code: 200
+  when: not (ambari_managed_repositories|default(True))
 
 - meta: flush_handlers
 
